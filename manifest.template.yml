@@ -1,0 +1,10 @@
+name: atlas-cli-api-plugin
+description: Atlas CLI Api POC
+version: $VERSION
+github:
+    owner: $GITHUB_REPOSITORY_OWNER
+    name: $GITHUB_REPOSITORY_NAME
+binary: $BINARY
+commands: 
+    api: 
+        description: Atlas CLI Api POC

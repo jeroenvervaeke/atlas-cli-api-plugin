@@ -5,15 +5,18 @@ use super::{Hierarchy, HierarchyEntry};
 
 impl Into<clap::Command> for &Hierarchy {
     fn into(self) -> clap::Command {
-        let mut cmd = self
+        let api_root = self
             .entries
             .iter()
-            .fold(command!(), |cmd, (slug, e)| {
+            .fold(Command::new("api"), |cmd, (slug, e)| {
                 cmd.subcommand(e.into_command(slug))
             }).subcommand_required(true);
 
-        cmd.build();
-        cmd
+        let mut root = command!();
+        root = root.subcommand(api_root).subcommand_required(true);
+        root.build();
+
+        root
     }
 }
 
