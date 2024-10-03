@@ -4,7 +4,7 @@ use std::{
 };
 
 use anyhow::{bail, Context, Result};
-use clap::{Arg, Command};
+use clap::{command, Arg, Command};
 use convert_case::{Case, Casing};
 use openapiv3::OpenAPI;
 use operation::Operation;
@@ -94,10 +94,9 @@ fn main() -> Result<()> {
         api_root = api_root.subcommand(group_cmd);
     }
 
-    let mut cli = Command::new("atlas")
-        .subcommand(api_root)
-        .subcommand_required(true);
+    let mut cli = command!().subcommand(api_root).subcommand_required(true);
 
+    cli.set_bin_name("atlas");
     cli.build();
 
     //print_command_tree(&cli, "", true);
