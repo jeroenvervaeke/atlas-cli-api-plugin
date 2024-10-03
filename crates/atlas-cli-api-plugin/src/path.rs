@@ -1,4 +1,4 @@
-use std::fmt::Display;
+use std::{borrow::Cow, fmt::Display};
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Hash)]
 pub struct Path<'a>(pub Vec<PathSegment<'a>>);
@@ -19,15 +19,15 @@ impl Display for Path<'_> {
 
 #[derive(Debug, PartialEq, Eq, Clone, Hash)]
 pub enum PathSegment<'a> {
-    Constant(&'a str),
-    Id(&'a str),
+    Constant(Cow<'a, str>),
+    Id(Cow<'a, str>),
 }
 
 impl Display for PathSegment<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             PathSegment::Constant(constant) => write!(f, "{constant}"),
-            PathSegment::Id(id) => write!(f, "{{{id}}}"),
+            PathSegment::Id(id) => write!(f, "{id}"),
         }
     }
 }
@@ -47,9 +47,23 @@ impl<'a> Path<'a> {
         Some(Path(segments))
     }
 
+    pub fn from_str_owned(str: &'a str) -> Option<Path<'static>> {
+        let segments: Vec<_> = str
+            .split('/')
+            .into_iter()
+            .filter_map(PathSegment::from_str_owned)
+            .collect();
+
+        if segments.is_empty() {
+            return None;
+        }
+
+        Some(Path(segments))
+    }
+
     pub fn consts<'b>(&'b self) -> impl Iterator<Item = &'b str> {
         self.0.iter().filter_map(|s| match s {
-            PathSegment::Constant(c) => Some(*c),
+            PathSegment::Constant(c) => Some(c.as_ref()),
             PathSegment::Id(_) => None,
         })
     }
@@ -64,8 +78,22 @@ impl<'a> PathSegment<'a> {
         // try to strip { and } once, if one of the operations fails this returns none
         Some(
             match str.strip_prefix('{').and_then(|x| x.strip_suffix('}')) {
-                Some(id) => PathSegment::Id(id),
-                None => PathSegment::Constant(str),
+                Some(id) => PathSegment::Id(Cow::Borrowed(id)),
+                None => PathSegment::Constant(Cow::Borrowed(str)),
+            },
+        )
+    }
+
+    pub fn from_str_owned(str: &'a str) -> Option<PathSegment<'static>> {
+        if str.is_empty() {
+            return None;
+        }
+
+        // try to strip { and } once, if one of the operations fails this returns none
+        Some(
+            match str.strip_prefix('{').and_then(|x| x.strip_suffix('}')) {
+                Some(id) => PathSegment::Id(Cow::Owned(id.to_owned())),
+                None => PathSegment::Constant(Cow::Owned(str.to_owned())),
             },
         )
     }
