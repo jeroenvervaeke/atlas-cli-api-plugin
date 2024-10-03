@@ -35,22 +35,21 @@ fn main() -> Result<()> {
     // Group operations per tag
     let mut grouped_operations = BTreeMap::<String, Vec<Operation>>::new();
     for operation in operations {
-        let tag = operation
-            .tag
-            .to_case(Case::Kebab)
-            .trim_start_matches("atlas-")
-            .to_owned();
-
-        if let Some(group) = grouped_operations.get_mut(&tag) {
+        if let Some(group) = grouped_operations.get_mut(&operation.tag) {
             group.push(operation);
         } else {
-            grouped_operations.insert(tag.clone(), vec![operation]);
+            grouped_operations.insert(operation.tag.clone(), vec![operation]);
         }
     }
 
     let mut api_root = Command::new("api").subcommand_required(true);
     for (group_name, operations) in &grouped_operations {
-        let mut group_cmd = Command::new(group_name);
+        let mut group_cmd = Command::new(
+            group_name
+                .to_case(Case::Kebab)
+                .trim_start_matches("atlas-")
+                .to_owned(),
+        );
 
         if let Some(tag_description) = spec
             .tags
