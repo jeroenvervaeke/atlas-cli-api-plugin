@@ -1,7 +1,10 @@
-use std::collections::BTreeMap;
+use std::{
+    collections::BTreeMap,
+    env::{self},
+};
 
 use anyhow::{bail, Context, Result};
-use clap::{command, Arg, Command};
+use clap::{Arg, Command};
 use convert_case::{Case, Casing};
 use openapiv3::OpenAPI;
 use operation::Operation;
@@ -91,7 +94,17 @@ fn main() -> Result<()> {
         api_root = api_root.subcommand(group_cmd);
     }
 
-    let mut cli = command!().subcommand(api_root).subcommand_required(true);
+    let current_exe = env::current_exe()
+        .context("get current binaries path")?
+        .file_name()
+        .context("get file name from binary path")?
+        .to_string_lossy()
+        .to_string();
+
+    let mut cli = Command::new(current_exe)
+        .subcommand(api_root)
+        .subcommand_required(true);
+
     cli.build();
 
     //print_command_tree(&cli, "", true);
