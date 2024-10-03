@@ -4,6 +4,7 @@ use crate::path::Path;
 
 #[derive(Debug)]
 pub struct Operation {
+    pub description: Option<String>,
     pub flags: Vec<OperationFlag>,
     pub operation_id: String,
     pub path: Path<'static>,
@@ -72,6 +73,8 @@ impl Operation {
             operation_id: operation_id.clone(),
         })?;
 
+        let description = operation.description.to_owned();
+
         let mut flags = vec![];
         for parameter in &operation.parameters {
             let parameter_data = match parameter {
@@ -109,6 +112,7 @@ impl Operation {
         }
 
         Ok(Self {
+            description,
             flags,
             operation_id,
             tag,

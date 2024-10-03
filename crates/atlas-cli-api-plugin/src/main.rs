@@ -51,8 +51,28 @@ fn main() -> Result<()> {
                 .to_owned(),
         );
 
+        if let Some(tag_description) = spec
+            .tags
+            .iter()
+            .find_map(|t| (&t.name == group_name).then(|| t.description.as_ref().to_owned()))
+            .flatten()
+        {
+            if let Some((first_sentence, _rest)) = tag_description.split_once('.') {
+                group_cmd = group_cmd.about(first_sentence.trim().to_lowercase());
+            }
+
+            group_cmd = group_cmd.long_about(tag_description);
+        }
+
         for operation in operations {
             let mut command = Command::new(operation.operation_id.to_owned());
+            if let Some(description) = operation.description.as_ref() {
+                if let Some((first_sentence, _rest)) = description.split_once('.') {
+                    command = command.about(first_sentence.trim().to_lowercase());
+                }
+
+                command = command.long_about(description.to_owned());
+            }
 
             for flag in &operation.flags {
                 let mut arg = Arg::new(flag.name.to_owned()).long(flag.name.to_owned());
@@ -71,14 +91,12 @@ fn main() -> Result<()> {
     let mut cli = command!().subcommand(api_root).subcommand_required(true);
     cli.build();
 
-    print_command_tree(&cli, "", true);
-    let _matches = cli.get_matches();
-
-    println!("todo: implement commands");
+    //print_command_tree(&cli, "", true);
+    let matches = cli.get_matches();
 
     Ok(())
 }
-
+/*
 fn print_command_tree(cmd: &Command, prefix: &str, last: bool) {
     let branch = if last { "└── " } else { "├── " };
     println!("{}{}{}", prefix, branch, cmd.get_name());
@@ -95,3 +113,4 @@ fn print_command_tree(cmd: &Command, prefix: &str, last: bool) {
         print_command_tree(subcmd, &child_prefix, is_last);
     }
 }
+ */
