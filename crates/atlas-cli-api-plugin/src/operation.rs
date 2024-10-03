@@ -16,6 +16,7 @@ pub struct Operation {
 pub struct OperationFlag {
     pub name: String,
     pub description: Option<String>,
+    pub required: bool,
 }
 
 #[derive(Debug, Error)]
@@ -108,6 +109,7 @@ impl Operation {
                     .description
                     .as_ref()
                     .map(|d| d.trim().to_owned()),
+                required: parameter_data.required,
             });
         }
 

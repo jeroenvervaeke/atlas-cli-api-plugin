@@ -1,6 +1,6 @@
 use std::collections::BTreeMap;
 
-use anyhow::{bail, Result};
+use anyhow::{bail, Context, Result};
 use clap::{command, Arg, Command};
 use convert_case::{Case, Casing};
 use openapiv3::OpenAPI;
@@ -35,21 +35,22 @@ fn main() -> Result<()> {
     // Group operations per tag
     let mut grouped_operations = BTreeMap::<String, Vec<Operation>>::new();
     for operation in operations {
-        if let Some(group) = grouped_operations.get_mut(&operation.tag) {
+        let tag = operation
+            .tag
+            .to_case(Case::Kebab)
+            .trim_start_matches("atlas-")
+            .to_owned();
+
+        if let Some(group) = grouped_operations.get_mut(&tag) {
             group.push(operation);
         } else {
-            grouped_operations.insert(operation.tag.clone(), vec![operation]);
+            grouped_operations.insert(tag.clone(), vec![operation]);
         }
     }
 
     let mut api_root = Command::new("api").subcommand_required(true);
     for (group_name, operations) in &grouped_operations {
-        let mut group_cmd = Command::new(
-            group_name
-                .to_case(Case::Kebab)
-                .trim_start_matches("atlas-")
-                .to_owned(),
-        );
+        let mut group_cmd = Command::new(group_name);
 
         if let Some(tag_description) = spec
             .tags
@@ -75,7 +76,10 @@ fn main() -> Result<()> {
             }
 
             for flag in &operation.flags {
-                let mut arg = Arg::new(flag.name.to_owned()).long(flag.name.to_owned());
+                let mut arg = Arg::new(flag.name.to_owned())
+                    .long(flag.name.to_owned())
+                    .required(flag.required);
+
                 if let Some(description) = &flag.description {
                     arg = arg.help(description.to_owned());
                 }
@@ -92,7 +96,18 @@ fn main() -> Result<()> {
     cli.build();
 
     //print_command_tree(&cli, "", true);
-    let matches = cli.get_matches();
+
+    let root_matches = cli.get_matches();
+    let (l1_name, l1_matches) = root_matches.subcommand().context("L1 match")?;
+    if l1_name != "api" {
+        bail!("expected 'api' to be called, got '{l1_name}' instead");
+    }
+
+    let (tag_name, tag_matches) = l1_matches.subcommand().context("flag match")?;
+    let (sub_command, _sub_command_matches) =
+        tag_matches.subcommand().context("subcommand match")?;
+
+    println!("executing tag: {tag_name}, command: {sub_command}");
 
     Ok(())
 }

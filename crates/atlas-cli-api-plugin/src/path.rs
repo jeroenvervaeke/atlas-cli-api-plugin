@@ -33,20 +33,6 @@ impl Display for PathSegment<'_> {
 }
 
 impl<'a> Path<'a> {
-    pub fn from_str(str: &'a str) -> Option<Self> {
-        let segments: Vec<_> = str
-            .split('/')
-            .into_iter()
-            .filter_map(PathSegment::from_str)
-            .collect();
-
-        if segments.is_empty() {
-            return None;
-        }
-
-        Some(Path(segments))
-    }
-
     pub fn from_str_owned(str: &'a str) -> Option<Path<'static>> {
         let segments: Vec<_> = str
             .split('/')
@@ -60,30 +46,9 @@ impl<'a> Path<'a> {
 
         Some(Path(segments))
     }
-
-    pub fn consts<'b>(&'b self) -> impl Iterator<Item = &'b str> {
-        self.0.iter().filter_map(|s| match s {
-            PathSegment::Constant(c) => Some(c.as_ref()),
-            PathSegment::Id(_) => None,
-        })
-    }
 }
 
 impl<'a> PathSegment<'a> {
-    pub fn from_str(str: &'a str) -> Option<Self> {
-        if str.is_empty() {
-            return None;
-        }
-
-        // try to strip { and } once, if one of the operations fails this returns none
-        Some(
-            match str.strip_prefix('{').and_then(|x| x.strip_suffix('}')) {
-                Some(id) => PathSegment::Id(Cow::Borrowed(id)),
-                None => PathSegment::Constant(Cow::Borrowed(str)),
-            },
-        )
-    }
-
     pub fn from_str_owned(str: &'a str) -> Option<PathSegment<'static>> {
         if str.is_empty() {
             return None;
