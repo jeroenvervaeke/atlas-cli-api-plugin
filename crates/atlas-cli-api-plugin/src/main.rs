@@ -22,10 +22,10 @@ fn main() -> Result<()> {
         match operation_result {
             Ok(operation) => operations.push(operation),
             Err(e) => match e {
-                operation::OperationCreationError::UnexpectedNumberOfTags { got, path, verb } => {
-                    eprintln!(
+                operation::OperationCreationError::UnexpectedNumberOfTags { ../*got, path, verb */ } => {
+                    /*eprintln!(
                         "Skipping endpoint: {verb} {path}, number of tags expected: 1, got: {got}"
-                    );
+                    );*/
                 }
                 e => bail!("failed to parse OAS spec: {e}"),
             },
