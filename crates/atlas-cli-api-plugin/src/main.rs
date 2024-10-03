@@ -94,14 +94,7 @@ fn main() -> Result<()> {
         api_root = api_root.subcommand(group_cmd);
     }
 
-    let current_exe = env::current_exe()
-        .context("get current binaries path")?
-        .file_name()
-        .context("get file name from binary path")?
-        .to_string_lossy()
-        .to_string();
-
-    let mut cli = Command::new(current_exe)
+    let mut cli = Command::new("atlas")
         .subcommand(api_root)
         .subcommand_required(true);
 
