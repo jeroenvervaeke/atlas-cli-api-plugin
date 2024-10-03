@@ -1,7 +1,4 @@
-use std::{
-    collections::BTreeMap,
-    env::{self},
-};
+use std::collections::BTreeMap;
 
 use anyhow::{bail, Context, Result};
 use clap::{command, Arg, Command};
@@ -43,6 +40,11 @@ fn main() -> Result<()> {
         } else {
             grouped_operations.insert(operation.tag.clone(), vec![operation]);
         }
+    }
+
+    // Sort operations in groups
+    for group in grouped_operations.values_mut() {
+        group.sort_unstable_by(|a, b| a.operation_id.cmp(&b.operation_id));
     }
 
     let mut api_root = Command::new("api").subcommand_required(true);
