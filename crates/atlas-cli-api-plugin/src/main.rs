@@ -2,6 +2,7 @@ use std::collections::BTreeMap;
 
 use anyhow::{bail, Result};
 use clap::{command, Arg, Command};
+use convert_case::{Case, Casing};
 use openapiv3::OpenAPI;
 use operation::Operation;
 use serde_yaml;
@@ -43,7 +44,12 @@ fn main() -> Result<()> {
 
     let mut api_root = Command::new("api").subcommand_required(true);
     for (group_name, operations) in &grouped_operations {
-        let mut group_cmd = Command::new(group_name);
+        let mut group_cmd = Command::new(
+            group_name
+                .to_case(Case::Kebab)
+                .trim_start_matches("atlas-")
+                .to_owned(),
+        );
 
         for operation in operations {
             let mut command = Command::new(operation.operation_id.to_owned());
